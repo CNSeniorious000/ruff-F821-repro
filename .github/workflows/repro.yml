@@ -1,0 +1,26 @@
+on: ["push", "workflow_dispatch"]
+
+env:
+  UV_SYSTEM_PYTHON: true
+
+jobs:
+  checks:
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [ubuntu, macos, windows]
+        py: ["3.10", "3.11", "3.12", "3.13", "pypy3.10"]
+    runs-on: ${{ matrix.os }}-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Set up Python ${{ matrix.py }}
+        uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.py }}
+      - name: Install dependencies
+        run: |
+          pip install uv --disable-pip-version-check
+          uv export --no-hashes | uv pip install -r -
+      - name: Ruff
+        run: |
+          ruff check hello.py
